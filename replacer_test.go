@@ -10,7 +10,7 @@ import (
 
 func TestNode_AddString(t *testing.T) {
 	assert := assertions.New(t)
-	t.Run("should add one string", func(t *testing.T) {
+	t.Run("should add strings and form a trie", func(t *testing.T) {
 		node := replacer.NewNode()
 
 		assert.NoError(node.AddString("hello"))
@@ -38,6 +38,32 @@ func TestNode_AddString(t *testing.T) {
 			}
 			expected, _ := json.MarshalIndent(expectedMap, "", "  ")
 			assert.Equal(string(expected), string(data))
+		}
+	})
+
+	t.Run("should throw error if a string that is a prefix of the given string is already present in trie", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		assert.NoError(node.AddString("hell"))
+		assert.EqualError(node.AddString("hello"), replacer.ErrPrefixConflict.Error())
+	})
+
+	t.Run("should throw error if the given string is a prefix of an existing string in trie", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		assert.NoError(node.AddString("hello"))
+		assert.EqualError(node.AddString("hell"), replacer.ErrContainsConflict.Error())
+	})
+}
+
+func TestNode_Contains(t *testing.T) {
+	assert := assertions.New(t)
+	t.Run("should return true for words in trie", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		{
+			assert.NoError(node.AddString("hello"))
+			assert.NoError(node.AddString("help"))
 		}
 
 		{

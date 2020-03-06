@@ -14,6 +14,19 @@ type Node struct {
 	next     map[byte]*Node
 }
 
+// ErrPrefixConflict represents an error where the prefix of the
+// added string is already present in the trie.
+// E.g if "hell" is already added, adding "hello" has a common prefix "hell"
+// This causes ambiguity when finding for words on when to quit.
+// Hence, this error is returned on AddString
+var ErrPrefixConflict = fmt.Errorf("conflict: a prefix of the world already exists")
+
+// ErrContainsConflict represents an error where the given added string
+// is contained in a string in the trie.
+// E.g if "hello" is already added, then adding "hell" becomes ambigous
+// as it is contained inside the existing trie.
+var ErrContainsConflict = fmt.Errorf("conflict: a prefix of the world already exists")
+
 // AddString will add the given string into the Trie structure
 // It marks the node of the last edge as terminal
 func (n *Node) AddString(s string) error {
@@ -23,17 +36,31 @@ func (n *Node) AddString(s string) error {
 
 	ch := s[0]
 	restOfString := s[1:]
-	nextNode, exists := n.next[ch]
-	if !exists {
+	nextNode, nextNodeExists := n.next[ch]
+	if !nextNodeExists {
 		nextNode = &Node{next: make(map[byte]*Node)}
 	}
 	n.next[ch] = nextNode
 
-	if len(s) == 1 {
+	lastCharacter := len(s) == 1
+
+	// Last character but is not a new node to be created
+	if lastCharacter && nextNodeExists {
+		return ErrContainsConflict
+	}
+
+	// Not the last character, but found a terminal node already
+	if !lastCharacter && nextNode.Terminates() {
+		return ErrPrefixConflict
+	}
+
+	// Last character and a new node
+	if lastCharacter {
 		nextNode.terminal = true
 		return nil
 	}
 
+	// Recurse the rest of the string otherwise
 	return nextNode.AddString(restOfString)
 }
 
