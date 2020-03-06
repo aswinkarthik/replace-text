@@ -38,7 +38,7 @@ func (n *Node) AddString(s string) error {
 	restOfString := s[1:]
 	nextNode, nextNodeExists := n.next[ch]
 	if !nextNodeExists {
-		nextNode = &Node{next: make(map[byte]*Node)}
+		nextNode = NewNode()
 	}
 	n.next[ch] = nextNode
 
@@ -73,7 +73,7 @@ func (n *Node) Terminates() bool {
 // NewNode is a constructor to create a new node
 func NewNode() *Node {
 	return &Node{
-		next: make(map[byte]*Node),
+		next: make(map[byte]*Node, 1),
 	}
 }
 
