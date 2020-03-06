@@ -28,9 +28,9 @@ func TestNode_AddString(t *testing.T) {
 								"terminal": true,
 							},
 							"l": map[string]interface{}{
-									"o": map[string]bool{
-										"terminal": true,
-									},
+								"o": map[string]bool{
+									"terminal": true,
+								},
 							},
 						},
 					},
