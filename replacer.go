@@ -12,6 +12,7 @@ import (
 type Node struct {
 	terminal bool
 	next     map[byte]*Node
+	value    string
 }
 
 // ErrPrefixConflict represents an error where the prefix of the
@@ -30,38 +31,7 @@ var ErrContainsConflict = fmt.Errorf("conflict: a prefix of the world already ex
 // AddString will add the given string into the Trie structure
 // It marks the node of the last edge as terminal
 func (n *Node) AddString(s string) error {
-	if len(s) == 0 {
-		return fmt.Errorf("empty string not accepted")
-	}
-
-	ch := s[0]
-	restOfString := s[1:]
-	nextNode, nextNodeExists := n.next[ch]
-	if !nextNodeExists {
-		nextNode = NewNode()
-	}
-	n.next[ch] = nextNode
-
-	lastCharacter := len(s) == 1
-
-	// Last character but is not a new node to be created
-	if lastCharacter && nextNodeExists {
-		return ErrContainsConflict
-	}
-
-	// Not the last character, but found a terminal node already
-	if !lastCharacter && nextNode.Terminates() {
-		return ErrPrefixConflict
-	}
-
-	// Last character and a new node
-	if lastCharacter {
-		nextNode.terminal = true
-		return nil
-	}
-
-	// Recurse the rest of the string otherwise
-	return nextNode.AddString(restOfString)
+	return n.insertString(s, "")
 }
 
 // Terminates returns true if the node is a terminal node
@@ -115,4 +85,48 @@ func (n *Node) Contains(k string) bool {
 		return true
 	}
 	return nextNode.Contains(restOfString)
+}
+
+// AddReplacement provides a way to define what string
+// needs to be found and what to be replaced with.
+// The string to be found is the path.
+// The string to be replaced is stored at the terminal node.
+func (n *Node) AddReplacement(old, new string) error {
+	return n.insertString(old, new)
+}
+
+func (n *Node) insertString(path string, leafValue string) error {
+	if len(path) == 0 {
+		return fmt.Errorf("empty string not accepted")
+	}
+
+	ch := path[0]
+	restOfString := path[1:]
+	nextNode, nextNodeExists := n.next[ch]
+	if !nextNodeExists {
+		nextNode = NewNode()
+	}
+	n.next[ch] = nextNode
+
+	lastCharacter := len(path) == 1
+
+	// Last character but is not a new node to be created
+	if lastCharacter && nextNodeExists {
+		return ErrContainsConflict
+	}
+
+	// Not the last character, but found a terminal node already
+	if !lastCharacter && nextNode.Terminates() {
+		return ErrPrefixConflict
+	}
+
+	// Last character and a new node
+	if lastCharacter {
+		nextNode.terminal = true
+		nextNode.value = leafValue
+		return nil
+	}
+
+	// Recurse the rest of the string otherwise
+	return nextNode.AddString(restOfString)
 }

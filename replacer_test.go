@@ -73,3 +73,15 @@ func TestNode_Contains(t *testing.T) {
 		}
 	})
 }
+
+func TestNode_AddReplacement(t *testing.T) {
+	assert := assertions.New(t)
+	t.Run("should add replacement text for given string", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		{
+			assert.NoError(node.AddReplacement("hello","world"))
+			assert.Error(node.AddReplacement("hello","world"))
+		}
+	})
+}
