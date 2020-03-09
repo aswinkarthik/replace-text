@@ -28,6 +28,10 @@ var ErrPrefixConflict = fmt.Errorf("conflict: a prefix of the world already exis
 // as it is contained inside the existing trie.
 var ErrContainsConflict = fmt.Errorf("conflict: a prefix of the world already exists")
 
+// ErrNodeNotFound is returned if there are no matching next nodes
+// for the given byte.
+var ErrNodeNotFound = fmt.Errorf("node not found")
+
 // AddString will add the given string into the Trie structure
 // It marks the node of the last edge as terminal
 func (n *Node) AddString(s string) error {
@@ -129,4 +133,13 @@ func (n *Node) insertString(path string, leafValue string) error {
 
 	// Recurse the rest of the string otherwise
 	return nextNode.AddString(restOfString)
+}
+
+// Next accepts a character and returns the next node continuing the chain
+func (n *Node) Next(ch byte) (*Node, error) {
+	if nextNode, exists := n.next[ch]; exists && nextNode != nil {
+		return nextNode, nil
+	}
+
+	return nil, ErrNodeNotFound
 }

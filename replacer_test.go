@@ -85,3 +85,26 @@ func TestNode_AddReplacement(t *testing.T) {
 		}
 	})
 }
+
+func TestNode_Next(t *testing.T) {
+	t.Run("should return error if next node cannot be found", func(t *testing.T) {
+		assert := assertions.New(t)
+		node := replacer.NewNode()
+		assert.NoError(node.AddString("test"))
+
+		nextNode, err := node.Next(byte('a'))
+		assert.Nil(nextNode)
+		assert.EqualError(err, replacer.ErrNodeNotFound.Error())
+	})
+
+	t.Run("should return next node when found", func(t *testing.T) {
+		assert := assertions.New(t)
+		node := replacer.NewNode()
+		assert.NoError(node.AddString("test"))
+
+		nextNode, err := node.Next(byte('t'))
+
+		assert.NotNil(nextNode)
+		assert.NoError(err)
+	})
+}
