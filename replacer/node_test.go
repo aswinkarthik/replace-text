@@ -2,9 +2,9 @@ package replacer_test
 
 import (
 	"encoding/json"
+	replacer "github.com/aswinkarthik/replace-text/replacer"
 	"testing"
 
-	"github.com/aswinkarthik/replacer"
 	assertions "github.com/stretchr/testify/assert"
 )
 

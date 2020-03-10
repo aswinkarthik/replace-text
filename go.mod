@@ -1,4 +1,4 @@
-module github.com/aswinkarthik/replacer
+module github.com/aswinkarthik/replace-text
 
 go 1.13
 

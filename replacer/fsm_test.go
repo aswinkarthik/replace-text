@@ -1,7 +1,7 @@
 package replacer_test
 
 import (
-	"github.com/aswinkarthik/replacer"
+	"github.com/aswinkarthik/replace-text/replacer"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
