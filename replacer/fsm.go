@@ -35,8 +35,6 @@ func NewStateMachines(root *Node) *StateMachines {
 // TerminalMachines hold all fsm that reached the terminal nodes.
 func (s *StateMachines) Accept(ch byte, pos int) {
 	resultMachines := make([]*StateMachine, 0, len(s.transitMachines))
-	str := string(ch)
-	_ = str
 
 	for _, m := range s.transitMachines {
 		nextNode, err := m.Node.Next(ch)
