@@ -32,10 +32,18 @@ var ErrContainsConflict = fmt.Errorf("conflict: a prefix of the world already ex
 // for the given byte.
 var ErrNodeNotFound = fmt.Errorf("node not found")
 
+// ErrKeyNotFound is returned if the queried key inside node is not present
+// This is returned if node is used as a Map
+var ErrKeyNotFound = fmt.Errorf("key not found")
+
+// ErrKeyNotSupported is returned if the queried key is an empty string
+// This is returned if node is used as a Map
+var ErrKeyNotSupported = fmt.Errorf("empty key not supported")
+
 // AddString will add the given string into the Trie structure
 // It marks the node of the last edge as terminal
 func (n *Node) AddString(s string) error {
-	return n.insertString(s, "")
+	return n.put(s, "")
 }
 
 // Terminates returns true if the node is a terminal node
@@ -71,35 +79,7 @@ func (n *Node) MarshalJSON() ([]byte, error) {
 	return json.Marshal(readableMap)
 }
 
-// Contains tests if the string k is present inside the
-// trie structure.
-func (n *Node) Contains(k string) bool {
-	if len(k) == 0 {
-		return false
-	}
-
-	ch := k[0]
-	restOfString := k[1:]
-	nextNode, exists := n.next[ch]
-	if !exists {
-		return false
-	}
-
-	if nextNode.Terminates() {
-		return true
-	}
-	return nextNode.Contains(restOfString)
-}
-
-// AddReplacement provides a way to define what string
-// needs to be found and what to be replaced with.
-// The string to be found is the path.
-// The string to be replaced is stored at the terminal node.
-func (n *Node) AddReplacement(old, new string) error {
-	return n.insertString(old, new)
-}
-
-func (n *Node) insertString(path string, leafValue string) error {
+func (n *Node) put(path string, leafValue string) error {
 	if len(path) == 0 {
 		return fmt.Errorf("empty string not accepted")
 	}
@@ -132,7 +112,7 @@ func (n *Node) insertString(path string, leafValue string) error {
 	}
 
 	// Recurse the rest of the string otherwise
-	return nextNode.AddString(restOfString)
+	return nextNode.put(restOfString, leafValue)
 }
 
 // Next accepts a character and returns the next node continuing the chain
@@ -142,4 +122,59 @@ func (n *Node) Next(ch byte) (*Node, error) {
 	}
 
 	return nil, ErrNodeNotFound
+}
+
+// AddReplacement provides a way to define what string
+// needs to be found and what to be replaced with.
+// The string to be found is the path.
+// The string to be replaced is stored at the terminal node.
+func (n *Node) AddReplacement(old, new string) error {
+	return n.Put(old, new)
+}
+
+// Put can be used to insert to Key-Value pair into the node.
+// This allows PUT implementation for the node so that it can be used as a Map.
+func (n *Node) Put(key, value string) error {
+	return n.put(key, value)
+}
+
+// Get can be used to query a Key and retrieve the value from the node.
+// This allows GET implementation for the node so that it can be used as a Map.
+func (n *Node) Get(key string) (string, error) {
+	if len(key) == 0 {
+		return "", ErrKeyNotSupported
+	}
+
+	ch := key[0]
+	restOfString := key[1:]
+	nextNode, exists := n.next[ch]
+	if !exists {
+		return "", ErrKeyNotFound
+	}
+
+	if nextNode.Terminates() {
+		return nextNode.value, nil
+	}
+	return nextNode.Get(restOfString)
+}
+
+// Contains tests if the string k is present inside the
+// trie structure. Contains can also be used as an
+// Exists implementation if node is used as a map
+func (n *Node) Contains(k string) bool {
+	if len(k) == 0 {
+		return false
+	}
+
+	ch := k[0]
+	restOfString := k[1:]
+	nextNode, exists := n.next[ch]
+	if !exists {
+		return false
+	}
+
+	if nextNode.Terminates() {
+		return true
+	}
+	return nextNode.Contains(restOfString)
 }

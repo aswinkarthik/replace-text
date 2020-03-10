@@ -74,15 +74,50 @@ func TestNode_Contains(t *testing.T) {
 	})
 }
 
-func TestNode_AddReplacement(t *testing.T) {
+func TestNode_Put(t *testing.T) {
 	assert := assertions.New(t)
 	t.Run("should add replacement text for given string", func(t *testing.T) {
 		node := replacer.NewNode()
 
 		{
-			assert.NoError(node.AddReplacement("hello","world"))
-			assert.Error(node.AddReplacement("hello","world"))
+			assert.NoError(node.Put("hello", "world"))
+			assert.Error(node.Put("hello", "world"))
 		}
+
+		{
+			val, err := node.Get("hello")
+			assert.NoError(err)
+			assert.Equal("world", val)
+		}
+	})
+}
+
+func TestNode_Get(t *testing.T) {
+	assert := assertions.New(t)
+	t.Run("should return error if empty key is inserted", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		val, err := node.Get("")
+		assert.Equal(replacer.ErrKeyNotSupported, err)
+		assert.Equal("", val)
+	})
+
+	t.Run("should return error if key not found", func(t *testing.T) {
+		node := replacer.NewNode()
+
+		val, err := node.Get("random-key")
+		assert.Equal(replacer.ErrKeyNotFound, err)
+		assert.Equal("", val)
+	})
+
+	t.Run("should return value for given key", func(t *testing.T) {
+		node := replacer.NewNode()
+		assert.NoError(node.Put("random-key", "random-value"))
+
+		val , err := node.Get("random-key")
+
+		assert.NoError(err)
+		assert.Equal("random-value", val)
 	})
 }
 
