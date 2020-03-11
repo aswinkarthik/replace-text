@@ -4,8 +4,8 @@ package replacer
 // It will hold a cursor in Trie based on what
 // characters have been passed through the fsm.
 type StateMachine struct {
-	StartPosition int
-	EndPosition   int
+	StartPosition int64
+	EndPosition   int64
 	Terminated    bool
 	ReplaceWith   string
 	Node          *Node
@@ -33,7 +33,7 @@ func NewStateMachines(root *Node) *StateMachines {
 // It will pass through all the transit machines and transition it to
 // the next state. If there is no state, the transit machine is discarded
 // TerminalMachines hold all fsm that reached the terminal nodes.
-func (s *StateMachines) Accept(ch byte, pos int) {
+func (s *StateMachines) Accept(ch byte, pos int64) {
 	resultMachines := make([]*StateMachine, 0, len(s.transitMachines))
 
 	for _, m := range s.transitMachines {

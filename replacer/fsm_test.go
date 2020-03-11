@@ -18,7 +18,7 @@ func TestStateMachines_Accept(t *testing.T) {
 		longText := "This is a long text, hello. After we continue there may be some help, and hello again. Even if hell is present, it does not matter."
 		{
 			for i := 0; i < len(longText); i++ {
-				fsm.Accept(longText[i], i)
+				fsm.Accept(longText[i], int64(i))
 			}
 		}
 
@@ -26,17 +26,17 @@ func TestStateMachines_Accept(t *testing.T) {
 		//fmt.Println(string(data))
 
 		actualResults := make([]string, 0)
-		actualStartPositions := make([]int, 0)
-		actualEndPositions := make([]int, 0)
+		actualStartPositions := make([]int64, 0)
+		actualEndPositions := make([]int64, 0)
 		for _, m := range fsm.TerminalMachines {
 			actualResults = append(actualResults, longText[m.StartPosition:m.EndPosition+1])
 			actualStartPositions = append(actualStartPositions, m.StartPosition)
 			actualEndPositions = append(actualEndPositions, m.EndPosition)
 		}
 
-		expectedResults := []string{"hello","help","hello"}
-		expectedStartPositions := []int{21,64,74}
-		expectedEndPositions := []int{25,67,78}
+		expectedResults := []string{"hello", "help", "hello"}
+		expectedStartPositions := []int64{21, 64, 74}
+		expectedEndPositions := []int64{25, 67, 78}
 
 		assert.Equal(t, expectedResults, actualResults)
 		assert.Equal(t, expectedStartPositions, actualStartPositions)

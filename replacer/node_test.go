@@ -114,7 +114,7 @@ func TestNode_Get(t *testing.T) {
 		node := replacer.NewNode()
 		assert.NoError(node.Put("random-key", "random-value"))
 
-		val , err := node.Get("random-key")
+		val, err := node.Get("random-key")
 
 		assert.NoError(err)
 		assert.Equal("random-value", val)

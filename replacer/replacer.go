@@ -42,7 +42,7 @@ func (r *Replacer) Run(reader io.ReadSeeker, writer io.Writer) error {
 
 func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) error {
 	// Construct the state machines first
-	for position, readBuffer := 0, make([]byte, bufferSize); true; {
+	for position, readBuffer := int64(0), make([]byte, bufferSize); true; {
 		n, err := reader.Read(readBuffer)
 		if n > 0 {
 			for _, b := range readBuffer[:n] {
@@ -73,7 +73,7 @@ func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) e
 	var n int64
 	for _, m := range r.stateMachines.TerminalMachines {
 		// Copy till first match
-		if _, err := io.CopyN(writer, reader, int64(m.StartPosition)-n); err != nil {
+		if _, err := io.CopyN(writer, reader, m.StartPosition-n); err != nil {
 			return fmt.Errorf("error copying data from source to destination: %v", err)
 		}
 
@@ -83,12 +83,12 @@ func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) e
 		}
 
 		// Seek to the end position and move on to next match
-		if _, err := reader.Seek(int64(m.EndPosition+1), io.SeekStart); err != nil {
+		if _, err := reader.Seek(m.EndPosition+1, io.SeekStart); err != nil {
 			return fmt.Errorf("error seeking to next location: %v", err)
 		}
 
 		// Update total bytes read
-		n = int64(m.EndPosition + 1)
+		n = m.EndPosition + 1
 	}
 
 	// Copy remaining data.
