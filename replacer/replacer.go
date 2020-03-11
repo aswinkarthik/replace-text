@@ -3,12 +3,17 @@ package replacer
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 // Replacer is the struct responsible for doing IO operations
 type Replacer struct {
 	stateMachines *StateMachines
 }
+
+// ErrNoMatchesFound is returned if the replacer did not find any text
+//  that need to be replaced.
+var ErrNoMatchesFound = fmt.Errorf("no matches found")
 
 // NewReplacer is a constructor for creating Replacer struct.
 // Accepts replacements and initializes state machines with trie
@@ -25,7 +30,7 @@ func NewReplacer(replacements map[string]string) (*Replacer, error) {
 	return &Replacer{sm}, nil
 }
 
-// Run accepts a reader and writer.
+// Replace accepts a reader and writer.
 // Data from reader is copied into writer.
 // While doing so, it replaces all found matches with replace value.
 //
@@ -34,10 +39,28 @@ func NewReplacer(replacements map[string]string) (*Replacer, error) {
 // The first pass is to move all the state machines.
 // Second pass to make use of all the terminal nodes to make the replacements
 // in the writer.
-func (r *Replacer) Run(reader io.ReadSeeker, writer io.Writer) error {
+func (r *Replacer) Replace(reader io.ReadSeeker, writer io.Writer) error {
 	const bufferSize = 8000
 
 	return r.run(bufferSize, reader, writer)
+}
+
+// ReplaceString accepts an input string and replaces strings
+// as per the replacer's replacement map.
+// It returns a the string with replacements as a result.
+// If no matches are found, the source string is returned as is along with error ErrNoMatchesFound.
+func (r *Replacer) ReplaceString(in string) (string, error) {
+	reader := strings.NewReader(in)
+	writer := &strings.Builder{}
+	err := r.Replace(reader, writer)
+	if err != nil {
+		if err == ErrNoMatchesFound {
+			return in, err
+		}
+		return "", fmt.Errorf("error replacing string: %v", err)
+	}
+
+	return writer.String(), nil
 }
 
 func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) error {
@@ -61,7 +84,7 @@ func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) e
 	}
 
 	if len(r.stateMachines.TerminalMachines) == 0 {
-		return fmt.Errorf("no matches found")
+		return ErrNoMatchesFound
 	}
 
 	// Reset to beginning of file

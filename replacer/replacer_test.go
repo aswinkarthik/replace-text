@@ -39,7 +39,7 @@ func TestReplacer_Run(t *testing.T) {
 		writer := &bytes.Buffer{}
 
 		{
-			err := r.Run(reader, writer)
+			err := r.Replace(reader, writer)
 			assert.NoError(t, err)
 		}
 
@@ -67,5 +67,46 @@ func TestReplacer_Run(t *testing.T) {
 		}
 
 		assert.Equal(t, expectedOutput, writer.String())
+	})
+}
+
+func TestReplacer_ReplaceString(t *testing.T) {
+	t.Run("should replace given string and return string when matches are found", func(t *testing.T) {
+		replacement := map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		}
+
+		r, err := NewReplacer(replacement)
+		assert.NoError(t, err)
+
+		input := "key1 need to be replaced by key2"
+		expectedOutput := "value1 need to be replaced by value2"
+
+		{
+			output, err := r.ReplaceString(input)
+
+			assert.NoError(t, err)
+			assert.Equal(t, expectedOutput, output)
+		}
+	})
+
+	t.Run("should return source string if there are no matches", func(t *testing.T) {
+		replacement := map[string]string{
+			"key1": "value1",
+			"key2": "value2",
+		}
+
+		r, err := NewReplacer(replacement)
+		assert.NoError(t, err)
+
+		input := "key3 need not be replaced by key4"
+
+		{
+			output, err := r.ReplaceString(input)
+
+			assert.Equal(t, ErrNoMatchesFound, err)
+			assert.Equal(t, input, output)
+		}
 	})
 }
