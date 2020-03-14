@@ -1,0 +1,6 @@
+#!/bin/bash -el
+
+set -e
+set -x
+
+go build -mod=vendor -v .

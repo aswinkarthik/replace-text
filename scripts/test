@@ -1,0 +1,6 @@
+#!/bin/bash -el
+
+set -e
+set -x
+
+go test -mod=vendor -cover -race -v ./...

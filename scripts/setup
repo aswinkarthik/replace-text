@@ -1,0 +1,6 @@
+#!/bin/bash -el
+
+set -e
+set -x
+
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.23.8

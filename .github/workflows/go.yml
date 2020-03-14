@@ -19,7 +19,9 @@ jobs:
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+    - name: Lint
+      run: ./scripts/setup && ./scripts/lint
     - name: Test
-      run: go test -mod=vendor -v -race -cover ./...
+      run: ./scripts/test
     - name: Build
-      run: go build -mod=vendor -v .
+      run: ./scripts/build
