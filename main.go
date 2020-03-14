@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/aswinkarthik/replace-text/fs"
+	"github.com/aswinkarthik/replace-text/replacer"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -24,10 +26,12 @@ func main() {
 	fs := fs.NewOsFs()
 	cli.HelpPrinter = overrideDefaultPrinter(cli.HelpPrinter)
 	app := &cli.App{
-		Name:   AppName,
-		Usage:  "Find & Replace multiple texts in files",
-		Action: run,
-		Writer: fs.DevNull(),
+		Name:            AppName,
+		Usage:           "Find & Replace multiple texts in files",
+		ArgsUsage:       "[PATH ...]",
+		Action:          run(fs),
+		Writer:          fs.DevNull(),
+		HideHelpCommand: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    flagPatternsFile,
@@ -44,8 +48,37 @@ func main() {
 	}
 }
 
-func run(ctx *cli.Context) error {
-	return fmt.Errorf("not implemented")
+func run(fs fs.Fs) func(ctx *cli.Context) error {
+	return func(ctx *cli.Context) error {
+		patternsFileName := ctx.String(flagPatternsFile)
+		patternsFile, err := fs.Open(patternsFileName)
+		if err != nil {
+			return fmt.Errorf("error opening patterns-file: %v", err)
+		}
+
+		var patterns map[string]string
+		if err := json.NewDecoder(patternsFile).Decode(&patterns); err != nil {
+			return fmt.Errorf("error decoding patterns file: %v", err)
+		}
+
+		r, err := replacer.NewReplacer(patterns)
+		if err != nil {
+			return fmt.Errorf("error creating replacer for given patterns: %v", err)
+		}
+
+		for _, inputFile := range ctx.Args().Slice() {
+			file, err := fs.Open(inputFile)
+			if err != nil {
+				return fmt.Errorf("error opening input file: %v", err)
+			}
+
+			if err := r.Replace(file, os.Stdout); err != nil {
+				return fmt.Errorf("error finding and replacing content in input file: %v", err)
+			}
+		}
+
+		return nil
+	}
 }
 
 func parseInput(fs fs.Fs) func(ctx *cli.Context) error {
@@ -61,10 +94,30 @@ func parseInput(fs fs.Fs) func(ctx *cli.Context) error {
 					ExitCodeValidationError,
 				)
 			}
-			return nil
+
 		}
 
-		return fmt.Errorf("not implemented")
+		if ctx.NArg() > 0 {
+			for _, arg := range ctx.Args().Slice() {
+				if !fs.IsFile(arg) {
+					ctx.App.Metadata[metadataValidationErrorsKey] = true
+					return cli.Exit(
+						fmt.Sprintf(`%s: file "%s" does not exist`, AppName, arg),
+						ExitCodeValidationError,
+					)
+				}
+			}
+		}
+
+		if ctx.NArg() == 0 {
+			ctx.App.Metadata[metadataValidationErrorsKey] = true
+			return cli.Exit(
+				fmt.Sprintf("%s: reading input from stdin is not supported yet", AppName),
+				ExitCodeValidationError,
+			)
+		}
+
+		return nil
 	}
 }
 

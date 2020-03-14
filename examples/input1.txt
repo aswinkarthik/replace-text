@@ -1,0 +1,4 @@
+there are lot of contents in this file.
+Example is key1 that need to be replaced as value1.
+In another example, where key2 is present, that needs to be replaced by value2.
+Apart from that there is going to be some content that need to be left untouched.
