@@ -53,7 +53,7 @@ Clone the repository
 **To Lint**
 
 ```bash
-./scripts/ling
+./scripts/lint
 ```
 
 **To build**
