@@ -8,7 +8,7 @@ import (
 
 // Replacer is the struct responsible for doing IO operations
 type Replacer struct {
-	stateMachines *StateMachines
+	root *Node
 }
 
 // ErrNoMatchesFound is returned if the replacer did not find any text
@@ -25,9 +25,7 @@ func NewReplacer(replacements map[string]string) (*Replacer, error) {
 		}
 	}
 
-	sm := NewStateMachines(root)
-
-	return &Replacer{sm}, nil
+	return &Replacer{root}, nil
 }
 
 // Replace accepts a reader and writer.
@@ -64,12 +62,14 @@ func (r *Replacer) ReplaceString(in string) (string, error) {
 }
 
 func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) error {
+	sm := NewStateMachines(r.root)
+
 	// Construct the state machines first
 	for position, readBuffer := int64(0), make([]byte, bufferSize); true; {
 		n, err := reader.Read(readBuffer)
 		if n > 0 {
 			for _, b := range readBuffer[:n] {
-				r.stateMachines.Accept(b, position)
+				sm.Accept(b, position)
 				position++
 			}
 		}
@@ -83,7 +83,7 @@ func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) e
 		}
 	}
 
-	if len(r.stateMachines.TerminalMachines) == 0 {
+	if len(sm.TerminalMachines) == 0 {
 		return ErrNoMatchesFound
 	}
 
@@ -94,7 +94,7 @@ func (r *Replacer) run(bufferSize int, reader io.ReadSeeker, writer io.Writer) e
 
 	// n represents total bytes read from reader
 	var n int64
-	for _, m := range r.stateMachines.TerminalMachines {
+	for _, m := range sm.TerminalMachines {
 		// Copy till first match
 		if _, err := io.CopyN(writer, reader, m.StartPosition-n); err != nil {
 			return fmt.Errorf("error copying data from source to destination: %v", err)

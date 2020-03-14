@@ -2,9 +2,10 @@ package replacer
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewReplacer(t *testing.T) {
@@ -18,7 +19,7 @@ func TestNewReplacer(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, r)
-		assert.NotNil(t, r.stateMachines)
+		assert.NotNil(t, r.root)
 	})
 }
 
